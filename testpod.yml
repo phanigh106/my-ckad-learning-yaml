@@ -1,0 +1,57 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  labels:
+    app: test-pod
+    namespace: default
+spec:
+  containers:
+  - name: test-pod
+    image: busybox
+    command: ['sh', '-c', 'cd /tmp/test1;ls;cat key1;echo $key2;echo $username;cd /tmp;ls;cat filesecure.txt;while true; do echo hello-world;sleep 10; done']
+    resources:
+      requests:
+        cpu: "125m"
+        memory: "100Mi"
+      limits:
+        cpu: "250m"
+        memory: "200Mi"
+    env:
+      - name: key2
+        valueFrom:
+          configMapKeyRef:
+            name: test-config
+            key: key2
+      - name: username
+        valueFrom:
+          secretKeyRef:
+            name: test-secret
+            key: username
+    volumeMounts:
+    - mountPath: /tmp/test 
+      name: test
+    - mountPath: /tmp/test1
+      name: config1
+    - mountPath: /tmp
+      name: test-security-context
+    livenessProbe:
+      exec:
+        command:
+        - echo
+        - livenesstesting
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  volumes:
+  - name: test
+    emptyDir: {}
+  - name: config1
+    configMap:
+      name: test-config
+      items:
+        - key: key1
+          path: key1
+  - name: test-security-context
+    hostPath:
+      path: /mnt/c/Users/Phani/Documents/wsl-kube-yml-files
